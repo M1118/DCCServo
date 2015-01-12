@@ -1,0 +1,27 @@
+#######################################
+# Syntax Coloring Map DCCServo
+#######################################
+
+#######################################
+# Datatypes (KEYWORD1)
+#######################################
+
+DCCServo         KEYWORD1
+
+#######################################
+# Methods and Functions (KEYWORD2)
+#######################################
+DCCServo                         KEYWORD2
+loop                             KEYWORD2
+setSpeed                         KEYWORD2
+setActive                        KEYWORD2
+setStart			 KEYWORD2
+setEnd				 KEYWORD2
+setTravelTime			 KEYWORD2
+writeTenths			 KEYWORD2
+
+#######################################
+# Constants (LITERAL1)
+
+
+#######################################
