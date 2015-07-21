@@ -1,6 +1,6 @@
 #include <DCCServo.h>
 
-DCCServo::DCCServo(int pin, int limit1, int limit2, unsigned int travelTime)
+DCCServo::DCCServo(int pin, int limit1, int limit2, unsigned int travelTime, unsigned int flags)
 {
   this->pin = pin;
   this->limit1 = limit1;
@@ -14,8 +14,22 @@ DCCServo::DCCServo(int pin, int limit1, int limit2, unsigned int travelTime)
   this->moving = false;
   this->active = false;
   this->clockwise = true;
-  this->servo.attach(this->pin);
-  this->servo.write(this->limit1);
+  this->flags = flags;
+  switch (flags)
+  {
+  case SERVO_INITL1:
+    this->servo.attach(this->pin);
+    this->servo.write(this->limit1);
+    break;
+  case SERVO_INITL2:
+    this->servo.attach(this->pin);
+    this->servo.write(this->limit2);
+    break;
+  case SERVO_INITMID:
+    this->servo.attach(this->pin);
+    this->servo.write(this->limit1 + (this->limit2 - this->limit1) / 2);
+    break;
+  }
   Serial.print("Servo on pin ");
   Serial.println(pin);
   Serial.print("TravelTime is ");
@@ -32,6 +46,9 @@ DCCServo::DCCServo(int pin, int limit1, int limit2, unsigned int travelTime)
 void DCCServo::loop()
 {
   int  newangle;
+
+  if (this->flags & SERVO_ABSOLUTE)
+    return;
   
   if (this->refresh > millis())
     return;
@@ -104,10 +121,28 @@ void DCCServo::setEnd(int angle)
   this->interval = this->travelTime / (this->tlimit2 - this->tlimit1);
 }
 
+void DCCServo::setPosition(int percentage)
+{
+unsigned long range = this->tlimit2 - this->tlimit1;
+unsigned long tenth = (percentage * range) / 100;
+
+	tenth += this->tlimit1;
+	this->angle = tenth;
+	if (this->active)
+		this->writeTenths((int)tenth);
+}		
+
 void DCCServo::setTravelTime(int time)
 {
   this->travelTime = time * 1000;
   this->interval = this->travelTime / (this->tlimit2 - this->tlimit1);
+}
+
+boolean DCCServo::isAbsolute()
+{
+  if (this->flags & SERVO_ABSOLUTE)
+  	return true;
+  return false;
 }
 
 #define SERVO_MIN() (MIN_PULSE_WIDTH)  // minimum value in uS for this servo

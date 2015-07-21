@@ -6,22 +6,28 @@
 # Datatypes (KEYWORD1)
 #######################################
 
-DCCServo         KEYWORD1
+DCCServo			KEYWORD1
 
 #######################################
 # Methods and Functions (KEYWORD2)
 #######################################
-DCCServo                         KEYWORD2
-loop                             KEYWORD2
-setSpeed                         KEYWORD2
-setActive                        KEYWORD2
-setStart			 KEYWORD2
-setEnd				 KEYWORD2
-setTravelTime			 KEYWORD2
-writeTenths			 KEYWORD2
+DCCServo                        KEYWORD2
+loop                            KEYWORD2
+setSpeed                        KEYWORD2
+setActive                       KEYWORD2
+setStart			KEYWORD2
+setEnd				KEYWORD2
+setTravelTime			KEYWORD2
+writeTenths			KEYWORD2
+setPosition			KEYWORD2
+isAbsolute			KEYWORD2
 
 #######################################
 # Constants (LITERAL1)
-
+SERVO_NONE			LITERAL1
+SERVO_INTL1			LITERAL1
+SERVO_INITL2			LITERAL1
+SERVO_INITMID			LITERAL1
+SERVO_ABSOLUTE			LITERAL1
 
 #######################################

@@ -9,6 +9,13 @@
 
 #include <Servo.h>
 
+#define SERVO_NONE	0x0000
+#define SERVO_INITL1	0x0001
+#define SERVO_INITL2	0x0002
+#define SERVO_INITMID	0x0003
+
+#define SERVO_ABSOLUTE	0x0004
+
 class DCCServo {
   private:
     Servo    servo;      // The encapsulted servo
@@ -28,15 +35,19 @@ class DCCServo {
     int      angle;      // Current angle of the servo
     unsigned long
              refresh;    // Next refresh time mills()
+    unsigned int
+	     flags;	 // Configuration flags
   public:
-    DCCServo(int, int, int, unsigned int);
-    void loop();
-    void setSpeed(int, boolean);
-    void setActive(boolean);
-    void setStart(int);
-    void setEnd(int);
-    void setTravelTime(int);
-    void writeTenths(int);
+    DCCServo(int, int, int, unsigned int, unsigned int flags = SERVO_INITL1);
+    void	loop();
+    void	setSpeed(int, boolean);
+    void	setActive(boolean);
+    void	setStart(int);
+    void	setEnd(int);
+    void	setTravelTime(int);
+    void	setPosition(int);
+    void	writeTenths(int);
+    boolean	isAbsolute();
 };
 
 #endif
