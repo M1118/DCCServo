@@ -45,6 +45,7 @@ class DCCServo {
     void	setStart(int);
     void	setEnd(int);
     void	setTravelTime(int);
+    void	setFlags(int);
     void	setPosition(int);
     void	writeTenths(int);
     boolean	isAbsolute();

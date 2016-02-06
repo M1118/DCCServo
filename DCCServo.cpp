@@ -2,12 +2,15 @@
 
 DCCServo::DCCServo(int pin, int limit1, int limit2, unsigned int travelTime, unsigned int flags)
 {
+unsigned long travelTimeMS;
+
   this->pin = pin;
   this->limit1 = limit1;
   this->limit2 = limit2;
   this->tlimit1 = limit1 * 10;
   this->tlimit2 = limit2 * 10;
-  this->travelTime = travelTime * 1000;
+  travelTimeMS = travelTime * 1000L;
+  this->travelTime = travelTimeMS;
   this->angle = tlimit1;
   this->interval = this->travelTime / (this->tlimit2 - this->tlimit1);
   this->refresh = millis() + this->interval;
@@ -15,7 +18,7 @@ DCCServo::DCCServo(int pin, int limit1, int limit2, unsigned int travelTime, uns
   this->active = false;
   this->clockwise = true;
   this->flags = flags;
-  switch (flags)
+  switch (flags & (SERVO_INITL1|SERVO_INITL2|SERVO_INITMID))
   {
   case SERVO_INITL1:
     this->servo.attach(this->pin);
@@ -121,15 +124,22 @@ void DCCServo::setEnd(int angle)
   this->interval = this->travelTime / (this->tlimit2 - this->tlimit1);
 }
 
+void DCCServo::setFlags(int flags)
+{
+  this->flags = (unsigned int)flags;
+}
+
 void DCCServo::setPosition(int percentage)
 {
 unsigned long range = this->tlimit2 - this->tlimit1;
 unsigned long tenth = (percentage * range) / 100;
 
 	tenth += this->tlimit1;
-	this->angle = tenth;
 	if (this->active)
+	{
+		this->angle = tenth;
 		this->writeTenths((int)tenth);
+	}
 }		
 
 void DCCServo::setTravelTime(int time)
