@@ -9,12 +9,16 @@
 
 #include <Servo.h>
 
-#define SERVO_NONE	0x0000
-#define SERVO_INITL1	0x0001
-#define SERVO_INITL2	0x0002
-#define SERVO_INITMID	0x0003
+#define SERVO_NONE		0x00
+#define SERVO_INITL1		0x01
+#define SERVO_INITL2		0x02
+#define SERVO_INITMID		0x03
 
-#define SERVO_ABSOLUTE	0x0004
+#define SERVO_ABSOLUTE		0x04
+#define SERVO_BOUNCE_L1		0x08
+#define SERVO_BOUNCE_L2		0x10
+#define SERVO_AUTO_REVERSE	0x20
+#define SERVO_REVERSE		0x80
 
 class DCCServo {
   private:
@@ -37,6 +41,14 @@ class DCCServo {
              refresh;    // Next refresh time mills()
     unsigned int
 	     flags;	 // Configuration flags
+    int      bounce_ang; // First bounce angle
+    int      bounce_step;// how far along in the bounce are we
+    int      blimit;
+    int      bclockwise;
+    boolean  bounced;
+    boolean  bouncing;
+    int      bouncepoint;
+    int	     reported;
   public:
     DCCServo(int, int, int, unsigned int, unsigned int flags = SERVO_INITL1);
     void	loop();
@@ -46,9 +58,13 @@ class DCCServo {
     void	setEnd(int);
     void	setTravelTime(int);
     void	setFlags(int);
+    void        setBounceAngle(int);
     void	setPosition(int);
+    void	setAngle(int);
     void	writeTenths(int);
     boolean	isAbsolute();
+    int		getAngle();
 };
 
+extern void notifyServoPosition(DCCServo *, int) __attribute__ ((weak));
 #endif

@@ -33,6 +33,10 @@ unsigned long travelTimeMS;
     this->servo.write(this->limit1 + (this->limit2 - this->limit1) / 2);
     break;
   }
+  this->bouncing = false;
+  this->bounced = false;
+  this->bounce_step = 0;
+#if DEBUG
   Serial.print("Servo on pin ");
   Serial.println(pin);
   Serial.print("TravelTime is ");
@@ -44,11 +48,13 @@ unsigned long travelTimeMS;
   Serial.print("Interval is ");
   Serial.println(this->interval);
   Serial.println("-------------------------------");
+#endif
 }
 
 void DCCServo::loop()
 {
   int  newangle;
+  boolean clockwise;
 
   if (this->flags & SERVO_ABSOLUTE)
     return;
@@ -62,19 +68,109 @@ void DCCServo::loop()
     return;
   }
 
+  clockwise = this->clockwise;
+  if (this->flags & SERVO_REVERSE)
+    clockwise = ! clockwise;
+
   newangle = this->angle;
-  if (this->clockwise && this->angle < this->tlimit2)
-    newangle = this->angle + 1;
-  else if (this->clockwise == false && this->angle > this->tlimit1)
-    newangle = this->angle - 1;
+  if (this->bouncing)
+  {
+    if (this->bclockwise && this->angle < this->blimit)
+    {
+      newangle = this->angle + 1;
+    }
+    else if (this->bclockwise == false && this->angle > this->bouncepoint)
+    {
+      newangle = this->angle - 1;
+    }
+    else if (this->angle == this->bouncepoint)
+    {
+      this->bounce_step++;
+      int bounce_angle;
+      bounce_angle = 10 * (this->bounce_ang >> (this->bounce_step / 2));
+      if (bounce_angle == 0)
+      {
+        this->bouncing = false;
+        this->bounced = true;
+        newangle = this->tlimit2;
+      }
+      else
+      {
+	if (this->blimit == this->tlimit2)
+        	this->bouncepoint = this->tlimit2 - (10 * bounce_angle);
+	else
+		this->blimit = this->tlimit1 + (10 * bounce_angle);
+        this->bclockwise = ! this->bclockwise;
+      }
+    }
+    else
+    {
+      this->bounce_step++;
+      int bounce_angle;
+      bounce_angle = 10 * (this->bounce_ang >> (this->bounce_step / 2));
+      if (bounce_angle == 0)
+      {
+        this->bouncing = false;
+        this->bounced = true;
+        newangle = this->tlimit1;
+      }
+      else
+      {
+	if (this->blimit == this->tlimit2)
+        	this->bouncepoint = this->tlimit2 - (10 * bounce_angle);
+	else
+		this->blimit = this->tlimit1 + (10 * bounce_angle);
+        this->bclockwise = ! this->bclockwise;
+      }
+    }
+  }
   else
-    this->moving = false;
+  {
+    if (clockwise && this->angle < this->tlimit2)
+    {
+      newangle = this->angle + 1;
+      this->bounced = false;
+    }
+    else if (clockwise == false && this->angle > this->tlimit1)
+    {
+      newangle = this->angle - 1;
+      this->bounced = false;
+    }
+    else if ((this->flags & SERVO_BOUNCE_L1) != 0 && clockwise == false
+            && this->bounced == false && this->bounce_ang != 0)
+    {
+      this->bounce_step = 1;
+      this->bouncing = true;
+      this->bouncepoint = this->angle;
+      this->blimit = this->tlimit1 + (10 * this->bounce_ang);
+      this->bclockwise = true;
+    }
+    else if ((this->flags & SERVO_BOUNCE_L2) != 0 && clockwise
+           && this->bounced == false && this->bounce_ang != 0)
+    {
+      this->bounce_step = 1;
+      this->bouncing = true;
+      this->blimit = this->angle;
+      this->bouncepoint = this->tlimit2 - (10 * this->bounce_ang);
+      this->bclockwise = false;
+    }
+    else if (this->flags & SERVO_AUTO_REVERSE)
+      this->flags = this->flags ^ SERVO_REVERSE;
+    else
+      this->moving = false;
+  }
 
 
   if (newangle != this->angle)
   {
     this->writeTenths(newangle);
     this->angle = newangle;
+  }
+  if (this->angle / 10 != this->reported)
+  {
+    this->reported = this->angle / 10;
+    if (notifyServoPosition)
+        notifyServoPosition(this, this->reported);
   }
   unsigned long delta = (this->interval * 100) / this->percentage;
   this->refresh = millis() + delta;
@@ -129,6 +225,11 @@ void DCCServo::setFlags(int flags)
   this->flags = (unsigned int)flags;
 }
 
+void DCCServo::setBounceAngle(int angle)
+{
+  this->bounce_ang = angle;
+}
+
 void DCCServo::setPosition(int percentage)
 {
 unsigned long range = this->tlimit2 - this->tlimit1;
@@ -141,6 +242,22 @@ unsigned long tenth = (percentage * range) / 100;
 		this->writeTenths((int)tenth);
 	}
 }		
+
+void DCCServo::setAngle(int angle)
+{
+unsigned long tenth = angle * 10;
+
+	this->angle = tenth;
+	if (this->active)
+	{
+		this->writeTenths((int)tenth);
+	}
+}		
+
+int DCCServo::getAngle()
+{
+	return this->angle / 10;
+}
 
 void DCCServo::setTravelTime(int time)
 {
